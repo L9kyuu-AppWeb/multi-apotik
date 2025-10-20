@@ -1,0 +1,109 @@
+multi-apotik/
+├── config.php
+├── login.php
+├── logout.php
+├── dashboard.php
+├── index.html
+│
+├── includes/
+│   ├── header.php                    ✅ Sudah ada
+│   ├── footer.php                    ✅ Sudah ada
+│   └── functions.php                 ⚠️ TAMBAH: Helper tambahan
+│
+├── assets/                            🔴 WAJIB TAMBAH!
+│   ├── css/
+│   │   └── custom.css                # Custom styles tambahan
+│   ├── js/
+│   │   ├── main.js                   # Global JS
+│   │   ├── fefo.js                   # FEFO logic frontend
+│   │   └── autocomplete.js           # Search obat real-time
+│   └── img/
+│       ├── logo.png
+│       └── no-image.jpg
+│
+├── api/                               🔴 WAJIB TAMBAH!
+│   ├── search_obat.php               # AJAX: Search obat by nama/kode
+│   ├── get_batch.php                 # AJAX: Get batch FEFO by id_obat
+│   ├── check_stok.php                # AJAX: Check stok tersedia
+│   └── get_harga.php                 # AJAX: Get harga obat
+│
+├── apotik/
+│   ├── index.php                     ✅ Sudah ada
+│   ├── create.php                    ✅ Sudah ada
+│   ├── edit.php                      ✅ Sudah ada
+│   └── delete.php                    ⚠️ TAMBAH: Handler hapus
+│
+├── obat/
+│   ├── index.php                     ✅ Sudah ada
+│   ├── create.php                    ✅ Sudah ada
+│   ├── edit.php                      ✅ Sudah ada
+│   ├── delete.php                    ⚠️ TAMBAH
+│   └── batch.php                     ✅ Sudah ada (kelola batch)
+│
+├── supplier/                          🔴 WAJIB TAMBAH!
+│   ├── index.php                     # List supplier
+│   ├── create.php                    # Tambah supplier
+│   ├── edit.php                      # Edit supplier
+│   └── delete.php                    # Hapus supplier
+│
+├── pelanggan/                         🔴 WAJIB TAMBAH!
+│   ├── index.php                     # List pelanggan
+│   ├── create.php                    # Tambah pelanggan
+│   └── edit.php                      # Edit pelanggan
+│
+├── dokter/                            🔴 WAJIB TAMBAH!
+│   ├── index.php                     # List dokter
+│   ├── create.php                    # Tambah dokter
+│   └── edit.php                      # Edit dokter
+│
+├── kategori/                          ⚠️ OPSIONAL (tapi recommended)
+│   ├── obat.php                      # Kategori obat
+│   └── pengeluaran.php               # Kategori pengeluaran
+│
+├── penjualan/
+│   ├── index.php                     ✅ Sudah ada
+│   ├── create.php                    ✅ Sudah ada (FEFO logic!)
+│   ├── process.php                   ✅ Sudah ada
+│   ├── print.php                     ✅ Sudah ada (cetak struk)
+│   └── detail.php                    ✅ Sudah ada
+│
+├── pembelian/
+│   ├── index.php                     ✅ Sudah ada
+│   ├── create.php                    ✅ Sudah ada
+│   ├── process.php                   ✅ Sudah ada
+│   └── detail.php                    ⚠️ TAMBAH: Lihat detail pembelian
+│
+├── pengeluaran/
+│   ├── index.php                     ✅ Sudah ada
+│   ├── create.php                    ✅ Sudah ada
+│   └── edit.php                      ⚠️ TAMBAH
+│
+├── resep/
+│   ├── index.php                     ✅ Sudah ada
+│   ├── create.php                    ✅ Sudah ada
+│   └── detail.php                    ⚠️ TAMBAH: Lihat detail resep
+│
+├── laporan/
+│   ├── penjualan.php                 ✅ Sudah ada
+│   ├── pembelian.php                 ✅ Sudah ada
+│   ├── stok.php                      ✅ Sudah ada
+│   ├── expired.php                   ✅ Sudah ada
+│   └── laba_rugi.php                 ✅ Sudah ada
+│
+├── users/
+│   ├── index.php                     ✅ Sudah ada
+│   ├── create.php                    ✅ Sudah ada
+│   ├── edit.php                      ⚠️ TAMBAH
+│   └── profile.php                   ⚠️ TAMBAH: Edit profile sendiri
+│
+├── backup/                            🔴 WAJIB TAMBAH!
+│   ├── index.php                     # Manual backup database
+│   ├── auto_backup.php               # Cron job backup
+│   └── .htaccess                     # Protect folder
+│
+├── uploads/                           ✅ Sudah ada
+│   ├── bukti_pengeluaran/
+│   ├── foto_profile/
+│   └── .htaccess                     ⚠️ TAMBAH: Prevent direct access
+│
+└── .htaccess                          🔴 WAJIB TAMBAH! (security)

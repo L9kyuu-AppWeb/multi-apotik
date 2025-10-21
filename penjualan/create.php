@@ -16,7 +16,8 @@ $query = "SELECT o.*, COALESCE(SUM(b.stok_sisa), 0) as total_stok
           WHERE o.id_apotik = ? AND o.status = 'aktif'
           GROUP BY o.id_obat
           HAVING total_stok > 0
-          ORDER BY o.nama_obat";
+          ORDER BY o.nama_obat
+          LIMIT 5";
 $stmt = $db->prepare($query);
 $stmt->bind_param("i", $user['id_apotik']);
 $stmt->execute();
@@ -221,12 +222,39 @@ let cart = [];
 
 // Search obat
 document.getElementById('searchObat').addEventListener('input', function(e) {
-    const search = e.target.value.toLowerCase();
-    document.querySelectorAll('.obat-item').forEach(item => {
-        const nama = item.dataset.nama;
-        item.style.display = nama.includes(search) ? 'block' : 'none';
-    });
+    const keyword = e.target.value;
+
+    fetch('../ajax/search_obat_penjualan.php?keyword=' + keyword)
+        .then(response => response.json())
+        .then(data => renderObatList(data))
+        .catch(error => console.error('Error:', error));
 });
+
+function renderObatList(data) {
+    const container = document.getElementById('obatContainer');
+    container.innerHTML = '';
+
+    if (data.length === 0) {
+        container.innerHTML = '<p class="text-gray-500">Obat tidak ditemukan</p>';
+        return;
+    }
+
+    data.forEach(obat => {
+        container.innerHTML += `
+            <div class="obat-item border border-gray-200 rounded-xl p-4 hover:border-purple-500 cursor-pointer"
+                 onclick='addObat(${JSON.stringify(obat)})'>
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h4 class="font-semibold">${obat.nama_obat}</h4>
+                        <p class="text-sm text-gray-500">${obat.jenis_obat}</p>
+                        <p class="text-sm text-gray-500">Stok: ${obat.total_stok} ${obat.satuan}</p>
+                    </div>
+                    <div class="text-right font-bold text-purple-600">${formatRupiah(obat.harga_jual)}</div>
+                </div>
+            </div>
+        `;
+    });
+}
 
 // Toggle resep container
 document.getElementById('tipePenjualan').addEventListener('change', function() {
@@ -267,27 +295,34 @@ function addObat(obat) {
         });
     }
     
+    console.log('Cart after add:', cart);
     renderCart();
 }
 
 function removeObat(index) {
     cart.splice(index, 1);
+    console.log('Cart after remove:', cart);
     renderCart();
 }
 
 function updateQty(index, qty) {
+    qty = parseInt(qty);
+    
     if (qty < 1) {
         removeObat(index);
         return;
     }
     
     if (qty > cart[index].stok) {
-        alert('Stok tidak mencukupi!');
+        alert('Stok tidak mencukupi! Maksimal: ' + cart[index].stok);
+        renderCart(); // Re-render to reset input
         return;
     }
     
-    cart[index].qty = parseInt(qty);
+    cart[index].qty = qty;
     cart[index].subtotal = cart[index].qty * cart[index].harga_jual;
+    
+    console.log('Cart after update qty:', cart);
     renderCart();
 }
 
@@ -336,17 +371,34 @@ function renderCart() {
 }
 
 function updateTotal() {
-    const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+    // Hitung subtotal dari cart
+    const subtotal = cart.reduce((sum, item) => {
+        return sum + (item.qty * item.harga_jual);
+    }, 0);
+    
     const diskon = parseFloat(document.getElementById('diskon').value) || 0;
     const pajak = parseFloat(document.getElementById('pajak').value) || 0;
     const total = subtotal - diskon + pajak;
     
+    // Debug log
+    console.log('=== UPDATE TOTAL ===');
+    console.log('Cart:', cart);
+    console.log('Subtotal calculated:', subtotal);
+    console.log('Diskon:', diskon);
+    console.log('Pajak:', pajak);
+    console.log('Total:', total);
+    
+    // Update display
     document.getElementById('subtotalText').textContent = formatRupiah(subtotal);
     document.getElementById('totalText').textContent = formatRupiah(total);
+    
+    // Update hidden inputs
     document.getElementById('subtotalInput').value = subtotal;
     document.getElementById('totalInput').value = total;
     document.getElementById('totalItemInput').value = cart.length;
     document.getElementById('itemsInput').value = JSON.stringify(cart);
+    
+    console.log('Items JSON:', JSON.stringify(cart));
     
     hitungKembalian();
 }
@@ -356,12 +408,18 @@ function hitungKembalian() {
     const dibayar = parseFloat(document.getElementById('jumlahDibayar').value) || 0;
     const kembalian = dibayar - total;
     
+    console.log('=== HITUNG KEMBALIAN ===');
+    console.log('Total:', total);
+    console.log('Dibayar:', dibayar);
+    console.log('Kembalian:', kembalian);
+    
     document.getElementById('kembalianText').textContent = formatRupiah(kembalian >= 0 ? kembalian : 0);
     document.getElementById('kembalianInput').value = kembalian >= 0 ? kembalian : 0;
     
     if (dibayar < total && dibayar > 0) {
         document.getElementById('kembalianText').classList.add('text-red-600');
         document.getElementById('kembalianText').classList.remove('text-green-600');
+        document.getElementById('kembalianText').textContent = 'KURANG: ' + formatRupiah(total - dibayar);
     } else {
         document.getElementById('kembalianText').classList.add('text-green-600');
         document.getElementById('kembalianText').classList.remove('text-red-600');
@@ -369,9 +427,16 @@ function hitungKembalian() {
 }
 
 // Form validation
+let isSubmitting = false;
+
 document.getElementById('formPenjualan').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (isSubmitting) {
+        return false;
+    }
+    
     if (cart.length === 0) {
-        e.preventDefault();
         alert('Keranjang masih kosong!');
         return false;
     }
@@ -380,10 +445,34 @@ document.getElementById('formPenjualan').addEventListener('submit', function(e) 
     const dibayar = parseFloat(document.getElementById('jumlahDibayar').value) || 0;
     
     if (dibayar < total) {
-        e.preventDefault();
-        alert('Jumlah pembayaran kurang!');
+        alert('Jumlah pembayaran kurang!\nTotal: ' + formatRupiah(total) + 
+              '\nDibayar: ' + formatRupiah(dibayar) +
+              '\nKekurangan: ' + formatRupiah(total - dibayar));
         return false;
     }
+    
+    // Final validation log
+    console.log('=== FORM SUBMIT ===');
+    console.log('Cart:', cart);
+    console.log('Subtotal:', document.getElementById('subtotalInput').value);
+    console.log('Total:', document.getElementById('totalInput').value);
+    console.log('Dibayar:', dibayar);
+    console.log('Kembalian:', document.getElementById('kembalianInput').value);
+    console.log('Items JSON:', document.getElementById('itemsInput').value);
+    
+    // Confirm
+    if (!confirm('Proses transaksi ini?\nTotal: ' + formatRupiah(total))) {
+        return false;
+    }
+    
+    // Show loading
+    isSubmitting = true;
+    const btn = document.getElementById('btnProses');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-pulse">Memproses...</span>';
+    
+    // Submit
+    this.submit();
     
     return true;
 });

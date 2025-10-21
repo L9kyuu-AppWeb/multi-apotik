@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
     
     if ($action === 'create') {
+    
         try {
             // Begin transaction
             $db->getConnection()->begin_transaction();
@@ -52,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $diskon, $pajak, $total_bayar, $jumlah_dibayar, $kembalian,
                 $metode_pembayaran
             );
+           
             
             if (!$stmt->execute()) {
                 throw new Exception('Gagal menyimpan transaksi: ' . $stmt->error);

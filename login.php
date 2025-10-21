@@ -143,6 +143,7 @@ $timeout = isset($_GET['timeout']) ? true : false;
                         <p><strong>Admin:</strong> admin / admin123</p>
                         <p><strong>Kasir:</strong> kasir1 / admin123</p>
                         <p><strong>Manajer:</strong> manajer / admin123</p>
+                        <p><strong><?php echo password_hash("admin123", PASSWORD_DEFAULT) ?></strong></p>
                     </div>
                 </div>
             </div>
